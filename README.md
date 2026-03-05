@@ -34,56 +34,60 @@ To run this project, you only need one thing installed on your computer:
 ### Method 1: The Docker Way (Recommended & Easiest)
 You do **not** need to install Python, Botasaurus, or Chrome on your computer. Docker handles everything in an isolated container!
 
-**1. Clone or download this repository** Make sure all files are in the same folder.
-
-**2. Build the Docker Image** Open your terminal in the folder and run this command. Docker will automatically install all the Python libraries (`requirements.txt`) inside the container for you.
+1. **Clone or download this repository:** Make sure all files are in the same folder.
+2. **Build the Docker Image:** Open your terminal in the folder and run this command:
 ```bash
 docker build -t novel-scraper-api .
+```
 
-### Method 2: Using Python
-Method 2: Local Python Setup (Manual Installation)
+3. **Run the Container:**
+```bash
+docker run -p 8000:8000 --shm-size="2g" novel-scraper-api
+```
 
-If you prefer to run the scraper directly on your machine without Docker, follow these steps to set up your environment and install the dependencies.
+---
 
-1. Create a Virtual Environment
-Open your terminal in the project folder and create an isolated environment to keep your system clean.
+### Method 2: Local Python Setup (Manual Installation)
 
-Bash
+If you prefer to run the scraper directly on your machine without Docker, follow these steps:
+
+1. **Create a Virtual Environment**
+```bash
 python -m venv venv
-2. Activate the Environment
-Activate the virtual environment so your terminal uses the local project settings.
+```
 
-Mac/Linux: source venv/bin/activate
+2. **Activate the Environment**
+* **Mac/Linux:** `source venv/bin/activate`
+* **Windows:** `venv\Scripts\activate`
 
-Windows: venv\Scripts\activate
-
-3. Install Python Libraries
-Install all the necessary tools (Botasaurus, FastAPI, EbookLib, etc.) using the requirements file.
-
-Bash
+3. **Install Python Libraries**
+```bash
 pip install -r requirements.txt
-4. Run the Application
-Start the FastAPI server. Once running, you can access the Web UI at http://localhost:8000.
+```
 
-Bash
+4. **Run the Application**
+```bash
 uvicorn api:app --host 0.0.0.0 --port 8000
-📖 How to Use
-Once the container (or local server) is running, open your web browser and go to: http://localhost:8000.
+```
 
-Paste the URL of Chapter 1 of the novel you want to scrape.
+---
 
-Enter the Novel Name and (optionally) the Author.
+## 📖 How to Use
+1. Once the container (or local server) is running, open your web browser and go to: **http://localhost:8000**.
+2. Paste the URL of **Chapter 1** of the novel you want to scrape.
+3. Enter the **Novel Name** and (optionally) the **Author**.
+4. (Optional) Click **"Choose File"** to upload a cover image from your computer.
+5. Click **Start Scraping!**
 
-(Optional) Click "Choose File" to upload a cover image from your computer.
+---
 
-Click Start Scraping!
+## ⚠️ Troubleshooting
 
-⚠️ Troubleshooting
-🛑 The scraper stopped randomly and said "Cloudflare block": Some websites have extremely strict anti-bot systems. Wait a few hours, or connect to a VPN to get a fresh IP address, and try again. The scraper automatically saves its progress, so it will resume right where it left off!
+* 🛑 **Cloudflare block:** Some websites have strict anti-bot systems. Wait a few hours or use a VPN. The scraper saves progress and will resume where it left off!
+* 💻 **Architecture Errors:** If building on Mac (M-series) to run on Windows, rebuild the image on the target machine: `docker build -t novel-scraper-api .`
+* 💥 **Failed to connect to Chrome:** Ensure you included the `--shm-size="2g"` flag in your run command.
 
-💻 Docker Architecture Errors (Mac vs. Windows): If the image was built on an Apple Silicon (M-series) Mac, it may not run natively on Windows without rebuilding. Run docker build -t novel-scraper-api . on the target machine to ensure the correct architecture is used.
+---
 
-💥 Failed to connect to Chrome URL: You likely forgot to include the --shm-size="2g" flag in your run command. Stop the container and run it again with the flag.
-
-📜 Disclaimer
-This tool is for personal, educational use only. Please respect the servers of the websites you are scraping. Heavy scraping can incur server costs for the website owners.
+## 📜 Disclaimer
+This tool is for personal, educational use only. Please respect website terms of service and server costs.
