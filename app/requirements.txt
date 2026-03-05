@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+botasaurus
+ebooklib
+beautifulsoup4
+pydantic

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Novel Scraper</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #121212; color: #ffffff; display: flex; justify-content: center; padding: 50px; }
+        .container { background-color: #1e1e1e; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 100%; max-width: 600px; }
+        h1 { margin-top: 0; font-size: 24px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        label { display: block; margin-top: 15px; font-weight: bold; color: #aaa; }
+        input[type="text"] { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #333; border-radius: 5px; background-color: #2d2d2d; color: white; box-sizing: border-box; }
+        .checkbox-group { display: flex; align-items: center; margin-top: 15px; }
+        .checkbox-group input { margin-right: 10px; width: 18px; height: 18px; }
+        button { margin-top: 25px; width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #555; cursor: not-allowed; }
+        
+        #progress-container { margin-top: 25px; padding: 15px; background-color: #2a2a2a; border-radius: 5px; display: none; text-align: center; }
+        #status-text { font-size: 18px; font-weight: bold; color: #4CAF50; margin-bottom: 5px; }
+        #chapter-count { color: #aaa; font-size: 14px; }
+        #download-btn { display: none; background-color: #28a745; margin-top: 15px; text-decoration: none; text-align: center; box-sizing: border-box; }
+        #download-btn:hover { background-color: #218838; }
+
+        /* Library Styles */
+        .library-section { margin-top: 40px; }
+        .library-item { background-color: #2a2a2a; padding: 15px; border-radius: 5px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .library-item-title { font-weight: bold; }
+        .library-item-status { font-size: 14px; color: #aaa; }
+        .dl-link { color: #4CAF50; text-decoration: none; font-weight: bold; }
+        .dl-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📚 Novel Scraper Web UI</h1>
+    
+  <div id="input-form">
+        <label>Chapter 1 URL</label>
+        <input type="text" id="url" placeholder="https://novelbin.com/...">
+        
+        <label>Novel Name</label>
+        <input type="text" id="name" placeholder="The Primeval Era">
+
+        <label>Author Name (Optional)</label>
+        <input type="text" id="author" placeholder="Unknown">
+
+        <label>Cover Image (Optional)</label>
+        <input type="file" id="cover" accept="image/*" style="margin-top: 5px; color: #aaa;">
+        
+        <div class="checkbox-group">
+            <input type="checkbox" id="wait-toggle" checked>
+            <label style="margin-top: 0;">Enable Cloudflare Bypass</label>
+        </div>
+        
+        <button id="start-btn" onclick="startScraping()">Start Scraping</button>
+    </div>
+
+    <div id="progress-container">
+        <div id="status-text">Initializing...</div>
+        <div id="chapter-count">0 chapters scraped</div>
+        <a id="download-btn" href="#" class="button" style="display: block; padding: 12px; color: white; border-radius: 5px; font-weight: bold;">📥 Download EPUB</a>
+    </div>
+
+    <div class="library-section">
+        <h1>📖 My Library</h1>
+        <div id="library-list">Loading...</div>
+    </div>
+</div>
+
+<script>
+    let pollInterval;
+
+    // Load library immediately on startup
+    window.onload = fetchLibrary;
+
+    async function fetchLibrary() {
+        try {
+            const res = await fetch("/api/history");
+            const jobs = await res.json();
+            const listDiv = document.getElementById("library-list");
+            listDiv.innerHTML = "";
+
+            const jobIds = Object.keys(jobs).reverse(); // Newest first
+            if (jobIds.length === 0) {
+                listDiv.innerHTML = "<p style='color:#aaa;'>No books scraped yet.</p>";
+                return;
+            }
+
+            jobIds.forEach(id => {
+                const job = jobs[id];
+                let actionHtml = `<span class="library-item-status">${job.status}</span>`;
+                
+                if (job.status === "completed") {
+                    actionHtml = `<a href="/api/download/${id}" class="dl-link">Download</a>`;
+                }
+
+                listDiv.innerHTML += `
+                    <div class="library-item">
+                        <span class="library-item-title">${job.novel_name}</span>
+                        ${actionHtml}
+                    </div>
+                `;
+            });
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+  async function startScraping() {
+        const url = document.getElementById("url").value;
+        const name = document.getElementById("name").value;
+        const author = document.getElementById("author").value; // Get author
+        const wait = document.getElementById("wait-toggle").checked;
+        const coverFile = document.getElementById("cover").files[0]; // Get the uploaded file
+
+        if (!url || !name) { alert("Please enter both URL and Novel Name!"); return; }
+
+        document.getElementById("start-btn").disabled = true;
+        document.getElementById("progress-container").style.display = "block";
+        document.getElementById("download-btn").style.display = "none";
+        document.getElementById("status-text").innerText = "Sending to server...";
+
+        // MAGIC: Convert the image file to a Base64 text string
+        let coverData = "";
+        if (coverFile) {
+            const reader = new FileReader();
+            coverData = await new Promise((resolve) => {
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(coverFile);
+            });
+        }
+
+        try {
+            const response = await fetch("/api/start-scrape", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                // Add author and cover_data to the payload
+                body: JSON.stringify({ 
+                    start_url: url, 
+                    novel_name: name, 
+                    author: author, 
+                    wait: wait, 
+                    cover_data: coverData 
+                })
+            });
+            
+            const data = await response.json();
+            if (data.job_id) {
+                fetchLibrary(); 
+                pollInterval = setInterval(() => checkStatus(data.job_id), 2000);
+            }
+        } catch (error) {
+            alert("Error communicating with server.");
+            resetUI();
+        }
+    }
+
+    async function checkStatus(jobId) {
+        try {
+            const response = await fetch(`/api/status/${jobId}`);
+            const data = await response.json();
+
+            document.getElementById("status-text").innerText = "Status: " + data.status.toUpperCase();
+            document.getElementById("chapter-count").innerText = data.progress;
+
+            if (data.status === "completed" || data.status.includes("failed")) {
+                clearInterval(pollInterval);
+                fetchLibrary(); // Refresh library when done
+                
+                if (data.status === "completed") {
+                    document.getElementById("status-text").innerText = "🎉 Finished!";
+                    const downloadBtn = document.getElementById("download-btn");
+                    downloadBtn.href = `/api/download/${jobId}`;
+                    downloadBtn.style.display = "block";
+                } else {
+                    document.getElementById("status-text").innerText = "❌ Failed!";
+                    document.getElementById("status-text").style.color = "#ff4c4c";
+                }
+                document.getElementById("start-btn").disabled = false;
+            }
+        } catch (error) {
+            console.error("Polling error", error);
+        }
+    }
+
+    function resetUI() {
+        document.getElementById("start-btn").disabled = false;
+        document.getElementById("progress-container").style.display = "none";
+    }
+</script>
+
+</body>
+</html>
