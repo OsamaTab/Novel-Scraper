@@ -10,6 +10,11 @@ Built with **FastAPI**, **Botasaurus**, and **EbookLib**, this scraper includes 
 
 ---
 
+## 📸 Preview
+![Web UI Screenshot](assets/web-ui-screenshot.png)
+
+---
+
 ## ✨ Features
 
 * 🖥️ **Web Interface:** No command line needed to scrape! Manage your downloads through a sleek, dark-mode web dashboard.
