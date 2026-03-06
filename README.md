@@ -96,3 +96,16 @@ uvicorn api:app --host 0.0.0.0 --port 8000
 
 ## 📜 Disclaimer
 This tool is for personal, educational use only. Please respect website terms of service and server costs.
+
+## ⚖️ License
+
+Copyright (c) 2026 Osama.
+
+This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**. 
+
+**Summary of Terms:**
+- ✅ **Personal Use**: You are free to use, copy, and modify this for your own use.
+- ✅ **Attribution**: You must give credit to the original author.
+- ❌ **No Commercial Use**: You may NOT sell this software, use it for profit, or include it in any commercial service.
+
+For commercial licensing or business inquiries, please reach out via GitHub.
