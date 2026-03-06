@@ -132,7 +132,7 @@ def scrape_novel(driver: Driver, data):
             print(f"[{job_id}] Could not find text. Website structure might have changed.")
             break
 
-        chapter_data = [title, paragraphs]
+        chapter_data = [ f"Chapter {chapter_number}" , paragraphs]
         all_chapters.append(chapter_data)
 
         with open(progress_file, "a", encoding="utf-8") as f:
