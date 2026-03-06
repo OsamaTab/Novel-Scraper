@@ -36,44 +36,53 @@ To run this project, you only need one thing installed on your computer:
 
 ## 🚀 Installation & Setup
 
-### Method 1: The Docker Way (Recommended & Easiest)
-You do **not** need to install Python, Botasaurus, or Chrome on your computer. Docker handles everything in an isolated container!
+### Method 1: Using the Pre-built Release (Fastest)
+If you downloaded the `novel-scraper-api.tar.gz` from the [Releases page](https://github.com/OsamaTab/Novel-Scraper/releases), you don't need to build anything.
 
-1. **Clone or download this repository:** Make sure all files are in the same folder.
-2. **Build the Docker Image:** Open your terminal in the folder and run this command:
-```bash
-docker build -t novel-scraper-api .
-```
-
-3. **Run the Container:**
-```bash
-docker run -p 8000:8000 --shm-size="2g" novel-scraper-api
-```
+1. **Load the image:**
+   ```bash
+   docker load -i novel-scraper-api.tar.gz
+   ```
+2. **Run the container:**
+   ```bash
+   docker run -p 8000:8000 --shm-size="2g" novel-scraper-api
+   ```
 
 ---
 
-### Method 2: Local Python Setup (Manual Installation)
+### Method 2: The Docker Way (Manual Build)
+Docker handles everything in an isolated container! No need to install Python or Chrome locally.
 
-If you prefer to run the scraper directly on your machine without Docker, follow these steps:
+1. **Clone this repository.**
+2. **Build the Docker Image:** Open your terminal in the root folder and run:
+   ```bash
+   docker build -t novel-scraper-api -f app/Dockerfile .
+   ```
+3. **Run the Container:**
+   ```bash
+   docker run -p 8000:8000 --shm-size="2g" novel-scraper-api
+   ```
 
-1. **Create a Virtual Environment**
-```bash
-python -m venv venv
-```
+---
 
-2. **Activate the Environment**
-* **Mac/Linux:** `source venv/bin/activate`
-* **Windows:** `venv\Scripts\activate`
+### Method 3: Local Python Setup (Manual Installation)
+If you prefer to run the scraper directly on your machine:
 
-3. **Install Python Libraries**
-```bash
-pip install -r requirements.txt
-```
-
-4. **Run the Application**
-```bash
-uvicorn api:app --host 0.0.0.0 --port 8000
-```
+1. **Navigate to the app folder:**
+   ```bash
+   cd app
+   ```
+2. **Create and Activate a Virtual Environment:**
+   * **Windows:** `python -m venv venv` && `venv\Scripts\activate`
+   * **Mac/Linux:** `python3 -m venv venv` && `source venv/bin/activate`
+3. **Install Requirements:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Run the Application:**
+   ```bash
+   uvicorn api:app --host 0.0.0.0 --port 8000
+   ```
 
 ---
 

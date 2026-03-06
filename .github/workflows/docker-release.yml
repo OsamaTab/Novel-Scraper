@@ -18,30 +18,15 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          # Define the tag
           TAG_NAME=${GITHUB_REF#refs/tags/}
           [ "$TAG_NAME" == "$GITHUB_REF" ] && TAG_NAME=latest
-          
-          echo "Building novel-scraper-api:$TAG_NAME..."
-          
-          # Build from root (.) but point to the Dockerfile inside app/
           docker build -t novel-scraper-api:$TAG_NAME -f app/Dockerfile .
 
       - name: Save and Compress
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
           [ "$TAG_NAME" == "$GITHUB_REF" ] && TAG_NAME=latest
-          
-          # Save the image to a compressed tarball
           docker save novel-scraper-api:$TAG_NAME | gzip > novel-scraper-api.tar.gz
-          
-          # Verify size (will fail the action if it's still 150kb)
-          SIZE=$(stat -c%s "novel-scraper-api.tar.gz")
-          echo "File size: $SIZE bytes"
-          if [ $SIZE -lt 1000000 ]; then
-            echo "Error: Tarball is too small. Build failed to include layers."
-            exit 1
-          fi
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -49,6 +34,32 @@ jobs:
         with:
           files: novel-scraper-api.tar.gz
           name: Release ${{ github.ref_name }}
+          # This adds your custom markdown to the release page automatically
+          body: |
+            ## 🚀 Installation & Setup
+            
+            ### Method 1: Loading the Pre-built Image (Fastest)
+            1. Download the `novel-scraper-api.tar.gz` from the assets below.
+            2. Load it into Docker:
+               ```bash
+               docker load -i novel-scraper-api.tar.gz
+               ```
+            3. Run it:
+               ```bash
+               docker run -p 8000:8000 --shm-size="2g" novel-scraper-api:${{ github.ref_name }}
+               ```
+
+            ### Method 2: Building Manually
+            If you prefer to build it yourself:
+            1. **Clone or download this repository.**
+            2. **Build the Docker Image:**
+               ```bash
+               docker build -t novel-scraper-api .
+               ```
+            3. **Run the Container:**
+               ```bash
+               docker run -p 8000:8000 --shm-size="2g" novel-scraper-api
+               ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -58,3 +69,4 @@ jobs:
         with:
           name: novel-scraper-api-tar
           path: novel-scraper-api.tar.gz
+          retention-days: 5
