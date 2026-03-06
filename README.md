@@ -1,120 +1,354 @@
+<div align="center">
+
 # 📚 Universal Web Novel to EPUB Scraper
 
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![License](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
 
-> A powerful, Dockerized web scraping tool and Web App that automatically downloads web novels and converts them into beautifully formatted `.epub` files for your e-reader.
+**A powerful web novel scraper that converts entire novels into beautifully formatted EPUB files.**
 
-Built with **FastAPI**, **Botasaurus**, and **EbookLib**, this scraper includes a built-in queue system, a real-time Web UI, and advanced Cloudflare bypass capabilities.
+Built with **FastAPI + Botasaurus + EbookLib** and packaged in **Docker** for easy deployment.
+
+</div>
 
 ---
 
-## 📸 Preview
+# 📑 Table of Contents
+
+- [Features](#-features)
+- [Preview](#-preview)
+- [Architecture](#-architecture)
+- [Tech Stack](#-tech-stack)
+- [Installation](#-installation)
+  - [Method 1: Prebuilt Release](#method-1--prebuilt-release)
+  - [Method 2: Docker Build](#method-2--docker-build)
+  - [Method 3: Local Python Setup](#method-3--local-python-setup)
+- [Usage](#-usage)
+- [Configuration](#-configuration)
+- [Troubleshooting](#-troubleshooting)
+- [Roadmap](#-roadmap)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+---
+
+# ✨ Features
+
+### 🖥️ Web Dashboard
+A modern **browser-based UI** to manage scraping jobs without touching the terminal.
+
+### 🧠 Universal Scraping Engine
+Automatically adapts to **different web novel layouts**, supporting many popular sites.
+
+### 🛡️ Cloudflare Bypass
+Uses **stealth Chromium automation** with human-like timing to bypass common protections.
+
+### ⏳ Background Job Queue
+Scraping tasks run in a **dedicated worker queue** to avoid memory overload and crashes.
+
+### 🎨 Custom EPUB Covers
+Upload a **cover image** and embed it into the generated EPUB.
+
+### ✍️ Metadata Support
+Add **author names, titles, and metadata** for cleaner ebook libraries.
+
+### 📚 Persistent Download Library
+All generated EPUB files are saved and accessible through the **web interface**.
+
+---
+
+# 📸 Preview
+
 ![Web UI Screenshot](assets/web-ui-screenshot.png)
 
 ---
 
-## ✨ Features
+# 🏗️ Architecture
 
-* 🖥️ **Web Interface:** No command line needed to scrape! Manage your downloads through a sleek, dark-mode web dashboard.
-* 🧠 **Universal Scraping:** Smart JavaScript extraction automatically adapts to different website layouts (works on NovelBin, FanMTL, and more).
-* 🛡️ **Cloudflare Bypass:** Uses stealth headless Chromium and human-pacing sleep cycles to navigate past aggressive anti-bot protections.
-* ⏳ **Job Queue System:** Safely queue up multiple books. The dedicated background worker processes them one at a time so your server never runs out of memory.
-* 🎨 **Custom Book Covers:** Upload a local image file directly through the Web UI to embed it as the EPUB cover.
-* ✍️ **Author & Metadata:** Add custom author names to your generated EPUBs.
-* 📚 **Persistent Library:** Keeps a history of all your downloaded books so you can access them anytime.
-
----
-
-## 🛠️ Prerequisites
-
-To run this project, you only need one thing installed on your computer:
-* 🐳 [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Recommended for Mac/Windows)
-
----
-
-## 🚀 Installation & Setup
-
-### Method 1: Using the Pre-built Release (Fastest)
-If you downloaded the `novel-scraper-api.tar.gz` from the [Releases page](https://github.com/OsamaTab/Novel-Scraper/releases), you don't need to build anything.
-
-1. **Load the image:**
-   ```bash
-   docker load -i novel-scraper-api.tar.gz
-   ```
-2. **Run the container:**
-   ```bash
-   docker run -p 8000:8000 --shm-size="2g" novel-scraper-api
-   ```
+```
+User Browser
+      │
+      ▼
+ FastAPI Web API
+      │
+      ▼
+ Job Queue System
+      │
+      ▼
+ Botasaurus Scraper Worker
+      │
+      ▼
+ Chapter Parser
+      │
+      ▼
+ EPUB Generator (EbookLib)
+      │
+      ▼
+ Download Library
+```
 
 ---
 
-### Method 2: The Docker Way (Manual Build)
-Docker handles everything in an isolated container! No need to install Python or Chrome locally.
+# 🧰 Tech Stack
 
-1. **Clone this repository.**
-2. **Build the Docker Image:** Open your terminal in the root folder and run:
-   ```bash
-   docker build -t novel-scraper-api -f app/Dockerfile .
-   ```
-3. **Run the container (replace v1.0.4 with your actual tag):**
-   ```bash
-   docker run -p 8000:8000 --shm-size="2g" novel-scraper-api:v1.0.4
-   ```
+| Layer | Technology |
+|------|-------------|
+| Backend | FastAPI |
+| Scraper | Botasaurus |
+| EPUB Generator | EbookLib |
+| Browser Automation | Chromium |
+| Server | Uvicorn |
+| Containerization | Docker |
 
 ---
 
-### Method 3: Local Python Setup (Manual Installation)
-If you prefer to run the scraper directly on your machine:
+# 📦 Installation
 
-1. **Navigate to the app folder:**
-   ```bash
-   cd app
-   ```
-2. **Create and Activate a Virtual Environment:**
-   * **Windows:** `python -m venv venv` && `venv\Scripts\activate`
-   * **Mac/Linux:** `python3 -m venv venv` && `source venv/bin/activate`
-3. **Install Requirements:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. **Run the Application:**
-   ```bash
-   uvicorn api:app --host 0.0.0.0 --port 8000
-   ```
+The **recommended method is Docker**.
 
 ---
 
-## 📖 How to Use
-1. Once the container (or local server) is running, open your web browser and go to: **http://localhost:8000**.
-2. Paste the URL of **Chapter 1** of the novel you want to scrape.
-3. Enter the **Novel Name** and (optionally) the **Author**.
-4. (Optional) Click **"Choose File"** to upload a cover image from your computer.
-5. Click **Start Scraping!**
+# Method 1 — Prebuilt Release
+
+If you downloaded the Docker image from the **GitHub Releases page**:
+
+### Load Image
+
+```bash
+docker load -i novel-scraper-api.tar.gz
+```
+
+### Run Container
+
+```bash
+docker run -p 8000:8000 --shm-size="2g" novel-scraper-api
+```
 
 ---
 
-## ⚠️ Troubleshooting
+# Method 2 — Docker Build
 
-* 🛑 **Cloudflare block:** Some websites have strict anti-bot systems. Wait a few hours or use a VPN. The scraper saves progress and will resume where it left off!
-* 💻 **Architecture Errors:** If building on Mac (M-series) to run on Windows, rebuild the image on the target machine: `docker build -t novel-scraper-api .`
-* 💥 **Failed to connect to Chrome:** Ensure you included the `--shm-size="2g"` flag in your run command.
+### Clone Repository
+
+```bash
+git clone https://github.com/OsamaTab/Novel-Scraper.git
+cd Novel-Scraper
+```
+
+### Build Image
+
+```bash
+docker build -t novel-scraper-api -f app/Dockerfile .
+```
+
+### Run Container
+
+```bash
+docker run -p 8000:8000 --shm-size="2g" novel-scraper-api
+```
 
 ---
 
-## 📜 Disclaimer
-This tool is for personal, educational use only. Please respect website terms of service and server costs.
+# Method 3 — Local Python Setup
 
-## ⚖️ License
+### Enter App Directory
 
-Copyright (c) 2026 Osama.
+```bash
+cd app
+```
 
-This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**. 
+### Create Virtual Environment
 
-**Summary of Terms:**
-- ✅ **Personal Use**: You are free to use, copy, and modify this for your own use.
-- ✅ **Attribution**: You must give credit to the original author.
-- ❌ **No Commercial Use**: You may NOT sell this software, use it for profit, or include it in any commercial service.
+Windows
 
-For commercial licensing or business inquiries, please reach out via GitHub.
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+Mac/Linux
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Start Server
+
+```bash
+uvicorn api:app --host 0.0.0.0 --port 8000
+```
+
+---
+
+# 📖 Usage
+
+1. Start the application.
+2. Open your browser:
+
+```
+http://localhost:8000
+```
+
+3. Enter:
+
+- URL of **Chapter 1**
+- **Novel title**
+- Optional **author name**
+- Optional **cover image**
+
+4. Click **Start Scraping**.
+
+The system will:
+
+- Crawl chapters
+- Extract text
+- Compile the book
+- Generate a **downloadable EPUB**
+
+---
+
+# ⚙️ Configuration
+
+Default server settings:
+
+| Setting | Value |
+|-------|------|
+| Host | `0.0.0.0` |
+| Port | `8000` |
+| Browser | Headless Chromium |
+| Queue Mode | Single worker |
+
+These values can be modified in the application configuration files.
+
+---
+
+# ⚠️ Troubleshooting
+
+### Cloudflare Blocking
+
+Some sites deploy strong anti-bot protections.
+
+Possible solutions:
+
+- Retry later
+- Use a VPN
+- Allow the scraper time to slow down
+
+Progress is **automatically saved**.
+
+---
+
+### Chromium Crashes
+
+Always run Docker with:
+
+```bash
+--shm-size="2g"
+```
+
+Otherwise Chromium may fail during scraping.
+
+---
+
+### Architecture Issues
+
+If building on **Apple Silicon (M-series)** but running on **Windows/Linux**, rebuild the Docker image on the target system.
+
+---
+
+# 🗺️ Roadmap
+
+Planned improvements:
+
+- [ ] Multi-worker scraping
+- [ ] Automatic chapter discovery
+- [ ] EPUB style themes
+- [ ] WebSocket real-time progress updates
+- [ ] User accounts and libraries
+- [ ] Calibre integration
+- [ ] CLI version
+
+---
+
+# 🤝 Contributing
+
+Contributions are welcome.
+
+If you'd like to help improve this project:
+
+1. Fork the repository
+2. Create a feature branch
+
+```
+git checkout -b feature/my-feature
+```
+
+3. Commit changes
+
+```
+git commit -m "Add new feature"
+```
+
+4. Push to GitHub
+
+```
+git push origin feature/my-feature
+```
+
+5. Open a Pull Request.
+
+---
+
+# 📜 Disclaimer
+
+This project is intended for **personal and educational use only**.
+
+Please respect:
+
+- Website terms of service
+- Copyright laws
+- Server resources of the sites you scrape.
+
+---
+
+# ⚖️ License
+
+Copyright © 2026 Osama
+
+Licensed under **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**.
+
+You may:
+
+✔ Use for personal projects  
+✔ Modify the code  
+✔ Share with attribution  
+
+You may NOT:
+
+❌ Sell the software  
+❌ Use it in commercial services  
+
+For **commercial licensing**, contact the author via GitHub.
+
+---
+
+# ⭐ Support the Project
+
+If you find this project useful:
+
+⭐ Star the repository  
+🐛 Report issues  
+💡 Suggest features  
+🔧 Submit pull requests
+
+It helps the project grow!
