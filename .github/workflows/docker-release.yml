@@ -3,14 +3,14 @@ name: Build and Release Docker Image Tarball
 on:
   push:
     tags:
-      - 'v*' # Triggers on tags starting with 'v' (e.g., v1.0.0)
-  workflow_dispatch: # Allows you to run it manually from the Actions tab
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Required to create a release
+      contents: write
 
     steps:
       - name: Checkout Code
@@ -25,29 +25,36 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          # Build the image and tag it
-          docker build -t novel-scraper:${{ steps.vars.outputs.tag || 'latest' }} .
+          # Match the name you use locally: novel-scraper-api
+          # We use --load to ensure the image is moved from the buildx cache to local docker images
+          docker buildx build -t novel-scraper-api:${{ steps.vars.outputs.tag || 'latest' }} --load .
 
-      - name: Save Image to Tarball
+      - name: Verify Image and Save to Tarball
         run: |
-          # Save the image to a tar file and compress it
-          docker save novel-scraper:${{ steps.vars.outputs.tag || 'latest' }} | gzip > novel-scraper.tar.gz
+          # List images to double check it exists
+          docker images
+          
+          # Save the image. We use the specific name we just built.
+          # Redirecting to gzip makes the download faster for you later.
+          docker save novel-scraper-api:${{ steps.vars.outputs.tag || 'latest' }} | gzip > novel-scraper-api.tar.gz
+          
+          # Check size in logs to confirm it's around 400MB (uncompressed) or ~150-200MB (compressed)
+          ls -lh novel-scraper-api.tar.gz
 
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: novel-scraper.tar.gz
+          files: novel-scraper-api.tar.gz
           name: Release ${{ steps.vars.outputs.tag }}
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Optional: If you run manually (workflow_dispatch), upload as an artifact instead
       - name: Upload Artifact (Manual Run)
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: novel-scraper-docker-tar
-          path: novel-scraper.tar.gz
+          name: novel-scraper-api-docker-tar
+          path: novel-scraper-api.tar.gz
