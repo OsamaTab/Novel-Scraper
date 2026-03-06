@@ -16,37 +16,42 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Extract Tag Name
-        id: vars
-        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-
-      - name: Build Docker Image
+      - name: Build Docker Image Locally
         run: |
-          # Match the name you use locally: novel-scraper-api
-          # We use --load to ensure the image is moved from the buildx cache to local docker images
-          docker buildx build -t novel-scraper-api:${{ steps.vars.outputs.tag || 'latest' }} --load .
+          # Get the tag name from the git ref
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          [ "$TAG_NAME" == "$GITHUB_REF" ] && TAG_NAME=latest
+          
+          echo "Building image from app/Dockerfile with tag: $TAG_NAME"
+          
+          # -f points to the Dockerfile location
+          # . sets the build context to the root (so 'COPY .' in Dockerfile works)
+          docker build -t novel-scraper-api:$TAG_NAME -f app/Dockerfile .
 
-      - name: Verify Image and Save to Tarball
+      - name: Save and Compress Image
         run: |
-          # List images to double check it exists
-          docker images
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          [ "$TAG_NAME" == "$GITHUB_REF" ] && TAG_NAME=latest
           
-          # Save the image. We use the specific name we just built.
-          # Redirecting to gzip makes the download faster for you later.
-          docker save novel-scraper-api:${{ steps.vars.outputs.tag || 'latest' }} | gzip > novel-scraper-api.tar.gz
+          echo "Saving image: novel-scraper-api:$TAG_NAME"
           
-          # Check size in logs to confirm it's around 400MB (uncompressed) or ~150-200MB (compressed)
-          ls -lh novel-scraper-api.tar.gz
+          # Save to tar, then compress with gzip
+          docker save novel-scraper-api:$TAG_NAME | gzip > novel-scraper-api.tar.gz
+          
+          # --- SIZE CHECK ---
+          FILESIZE=$(stat -c%s "novel-scraper-api.tar.gz")
+          echo "Final compressed file size: $((FILESIZE / 1024 / 1024)) MB"
+          if [ $FILESIZE -lt 1000000 ]; then
+            echo "Error: Resulting tarball is too small ($FILESIZE bytes). Build likely failed."
+            exit 1
+          fi
 
       - name: Create Release and Upload Asset
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: novel-scraper-api.tar.gz
-          name: Release ${{ steps.vars.outputs.tag }}
+          name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
         env:
