@@ -16,50 +16,45 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Build Docker Image Locally
+      - name: Build Docker Image
         run: |
-          # Get the tag name from the git ref
+          # Define the tag
           TAG_NAME=${GITHUB_REF#refs/tags/}
           [ "$TAG_NAME" == "$GITHUB_REF" ] && TAG_NAME=latest
           
-          echo "Building image from app/Dockerfile with tag: $TAG_NAME"
+          echo "Building novel-scraper-api:$TAG_NAME..."
           
-          # -f points to the Dockerfile location
-          # . sets the build context to the root (so 'COPY .' in Dockerfile works)
+          # Build from root (.) but point to the Dockerfile inside app/
           docker build -t novel-scraper-api:$TAG_NAME -f app/Dockerfile .
 
-      - name: Save and Compress Image
+      - name: Save and Compress
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
           [ "$TAG_NAME" == "$GITHUB_REF" ] && TAG_NAME=latest
           
-          echo "Saving image: novel-scraper-api:$TAG_NAME"
-          
-          # Save to tar, then compress with gzip
+          # Save the image to a compressed tarball
           docker save novel-scraper-api:$TAG_NAME | gzip > novel-scraper-api.tar.gz
           
-          # --- SIZE CHECK ---
-          FILESIZE=$(stat -c%s "novel-scraper-api.tar.gz")
-          echo "Final compressed file size: $((FILESIZE / 1024 / 1024)) MB"
-          if [ $FILESIZE -lt 1000000 ]; then
-            echo "Error: Resulting tarball is too small ($FILESIZE bytes). Build likely failed."
+          # Verify size (will fail the action if it's still 150kb)
+          SIZE=$(stat -c%s "novel-scraper-api.tar.gz")
+          echo "File size: $SIZE bytes"
+          if [ $SIZE -lt 1000000 ]; then
+            echo "Error: Tarball is too small. Build failed to include layers."
             exit 1
           fi
 
-      - name: Create Release and Upload Asset
+      - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: novel-scraper-api.tar.gz
           name: Release ${{ github.ref_name }}
-          draft: false
-          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Artifact (Manual Run)
+      - name: Save as Action Artifact (Manual Run)
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: novel-scraper-api-docker-tar
+          name: novel-scraper-api-tar
           path: novel-scraper-api.tar.gz
