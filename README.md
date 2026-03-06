@@ -58,9 +58,9 @@ Docker handles everything in an isolated container! No need to install Python or
    ```bash
    docker build -t novel-scraper-api -f app/Dockerfile .
    ```
-3. **Run the Container:**
+3. **Run the container (replace v1.0.4 with your actual tag):**
    ```bash
-   docker run -p 8000:8000 --shm-size="2g" novel-scraper-api
+   docker run -p 8000:8000 --shm-size="2g" novel-scraper-api:v1.0.4
    ```
 
 ---
